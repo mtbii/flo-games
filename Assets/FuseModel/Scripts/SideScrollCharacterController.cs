@@ -99,4 +99,12 @@ public class SideScrollCharacterController : MonoBehaviour
             //rBody.velocity = Vector3.zero; //new Vector3(0, rBody.velocity.y, rBody.velocity.z);
         }
     }
+
+    public void Reset()
+    {
+        rBody.rotation = Quaternion.AngleAxis(90, Vector3.up);
+        rBody.position = new Vector3(0, 25, -10);
+        rBody.velocity = Vector3.zero;
+        Physics.gravity = 9.8f*Vector3.down;
+    }
 }
