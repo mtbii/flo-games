@@ -13,7 +13,20 @@ public class SideScrollCharacterController : MonoBehaviour
     private Animator animator;
     private bool grounded;
     private float distToGround = 0;
+    private float roll = 0;
     private bool facingForward = true;
+
+    public float Roll
+    {
+        get
+        {
+            return roll;
+        }
+        set
+        {
+            roll = value;
+        }
+    }
 
     // Use this for initialization
     void Start()
@@ -55,13 +68,34 @@ public class SideScrollCharacterController : MonoBehaviour
 
         forwardInput = Mathf.Abs(forwardInput);
 
-        if(Input.GetButtonUp("Jump"))
+        if(Input.GetKeyUp(KeyCode.E))
         {
             rBody.position -= Physics.gravity.normalized;
-            Quaternion delta = facingForward ? Quaternion.Euler(-90, 0, 0) : Quaternion.Euler(90, 0, 0);
+            Quaternion worldDelta = Quaternion.Euler(0, 0, -90);
+            Physics.gravity = worldDelta * Physics.gravity;
+
+            Roll = (Roll - 90) % 360;
+
+            if(Roll < 0)
+            {
+                Roll += 360;
+            }
+
+            rBody.rotation = Quaternion.identity;
+            rBody.rotation *= Quaternion.AngleAxis(Roll, Vector3.forward);
+            rBody.rotation *= Quaternion.AngleAxis(90, Vector3.up);
+        }
+
+        if (Input.GetKeyUp(KeyCode.Q))
+        {
+            rBody.position -= Physics.gravity.normalized;
             Quaternion worldDelta = Quaternion.Euler(0, 0, 90);
             Physics.gravity = worldDelta * Physics.gravity;
-            rBody.rotation *= delta;
+
+            Roll = (Roll + 90) % 360;
+            rBody.rotation = Quaternion.identity;
+            rBody.rotation *= Quaternion.AngleAxis(Roll, Vector3.forward);
+            rBody.rotation *= Quaternion.AngleAxis(90, Vector3.up);
         }
     }
 
@@ -106,5 +140,6 @@ public class SideScrollCharacterController : MonoBehaviour
         rBody.position = new Vector3(0, 25, -10);
         rBody.velocity = Vector3.zero;
         Physics.gravity = 9.8f*Vector3.down;
+        Roll = 0;
     }
 }
