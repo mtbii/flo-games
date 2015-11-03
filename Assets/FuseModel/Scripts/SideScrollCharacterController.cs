@@ -96,6 +96,7 @@ public class SideScrollCharacterController : MonoBehaviour
             rBody.rotation = Quaternion.identity;
             rBody.rotation *= Quaternion.AngleAxis(Roll, Vector3.forward);
             rBody.rotation *= Quaternion.AngleAxis(90, Vector3.up);
+
         }
     }
 
