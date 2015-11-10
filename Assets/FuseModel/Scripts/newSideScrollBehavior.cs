@@ -2,7 +2,7 @@
 using System.Collections;
 using System;
 
-public class SideScrollCharacterController : MonoBehaviour
+public class newSideScrollBehavior : MonoBehaviour
 {
 
     public float inputDeadzone = 0.1f;
@@ -18,6 +18,7 @@ public class SideScrollCharacterController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+
         if (GetComponent<Rigidbody>())
         {
             rBody = GetComponent<Rigidbody>();
@@ -40,36 +41,23 @@ public class SideScrollCharacterController : MonoBehaviour
 
     void GetInput()
     {
-        forwardInput = Input.GetAxis("Horizontal");
+        if (Input.GetKeyUp(KeyCode.UpArrow))
+            Physics.gravity = -Vector3.up * 9.81f;
 
-        if(facingForward && forwardInput < 0)
-        {
-            transform.rotation *= Quaternion.AngleAxis(180, Vector3.up);
-            facingForward = false;
-        }
+        if (Input.GetKeyUp(KeyCode.LeftArrow))
+            Physics.gravity = -Vector3.right * 9.81f;
 
-        else if (!facingForward && forwardInput > 0)
-        {
-            transform.rotation *= Quaternion.AngleAxis(180, Vector3.up);
-            facingForward = true;
-        }
+        if (Input.GetKeyUp(KeyCode.DownArrow))
+            Physics.gravity = Vector3.up * 9.81f;
 
-        forwardInput = Mathf.Abs(forwardInput);
-
-        if(Input.GetButtonUp("Jump"))
-        {
-            rBody.position -= Physics.gravity.normalized;
-            Quaternion delta = facingForward ? Quaternion.Euler(-90, 0, 0) : Quaternion.Euler(90, 0, 0);
-            Quaternion worldDelta = Quaternion.Euler(0, 0, 90);
-            Physics.gravity = worldDelta * Physics.gravity;
-            rBody.rotation *= delta;
-        }
+        if (Input.GetKeyUp(KeyCode.RightArrow))
+            Physics.gravity = Vector3.right * 9.81f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        GetInput();
+        GetInput();     //maybe throw this into FixedUpdate()?
     }
 
     void FixedUpdate()
@@ -77,7 +65,7 @@ public class SideScrollCharacterController : MonoBehaviour
         if (animator)
         {
             CheckIfGrounded();
-            animator.SetFloat("Speed", forwardInput*3);
+            animator.SetFloat("Speed", forwardInput * 3);
             animator.SetBool("Grounded", grounded);
             animator.SetFloat("AirVelocity", rBody.velocity.y);
         }
@@ -86,7 +74,7 @@ public class SideScrollCharacterController : MonoBehaviour
 
     private void CheckIfGrounded()
     {
-        grounded = Physics.Raycast(rBody.position - Physics.gravity.normalized*.05f, Physics.gravity.normalized, distToGround + 0.1f);
+        grounded = Physics.Raycast(rBody.position - Physics.gravity.normalized * .05f, Physics.gravity.normalized, distToGround + 0.1f);
     }
 
     void Run()
