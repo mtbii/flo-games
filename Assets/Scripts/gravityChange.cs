@@ -1,23 +1,88 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class gravityChange : MonoBehaviour {
+public class gravityChange : MonoBehaviour
+{
 
     public Vector3 gravity;
+    private Rigidbody rBody;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
 
-        //gravity = Physics.gravity;
-	}
-	
+        if (GetComponent<Rigidbody>())
+        {
+            rBody = GetComponent<Rigidbody>();
+        }
+        else
+        {
+            Debug.LogError("The character needs a rigidBody.");
+        }
 
-	void FixedUpdate () {
+        gravity = -Vector3.up * 100f;
+        //gravity = new Vector3(0,-25,0);                       //use this as 'direction' for Raycasts
+        rBody.AddForce(gravity);
+    }
 
-        Rigidbody rb = this.GetComponent<Rigidbody>();
-        gravity = -Vector3.up * 9.8f;
-        rb.AddForce(gravity);
-        //rb.AddForce(transform.up * -1 * gravity);
+
+    void FixedUpdate()
+    {
+
+        //Keep if needed
+        //if (Input.GetKeyDown(KeyCode.UpArrow))
+        //{
+        //    gravity = new Vector3(0,25,0);
+        //    rBody.AddForce(gravity);
+        //}
+
+        //if (Input.GetKeyDown(KeyCode.DownArrow))
+        //{
+        //    gravity = new Vector3(0,-25,0);
+        //    rBody.AddForce(gravity);
+        //}
+
+        //if (Input.GetKeyDown(KeyCode.LeftArrow))
+        //{
+        //    gravity = -Vector3.right * 9.8f;
+        //    rBody.AddForce(gravity);
+        //}
+
+        //if (Input.GetKeyDown(KeyCode.RightArrow))
+        //{
+        //    gravity = Vector3.right * 9.8f;
+        //    rBody.AddForce(gravity);
+        //}
+
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            gravity = Vector3.up;
+            Physics.gravity = gravity * 25f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            gravity = -Vector3.up;
+            Physics.gravity = gravity * 25f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            gravity = -Vector3.right;
+            Physics.gravity = gravity * 25f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            gravity = Vector3.right;
+            Physics.gravity = gravity * 25f;
+        }
+
+
+
+
+
+
 
         //Physics.gravity = gravity;
 

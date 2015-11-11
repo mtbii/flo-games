@@ -1,43 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class basicMovement : MonoBehaviour {
+public class basicMovement : MonoBehaviour
+{
 
     //Variables
-    //public float speed = 6.0F;
-    //public float gravity = 20.0F;
-    //private Vector3 moveDirection = Vector3.zero;
+    //Need to clear out unused variables when script is completed
     private Rigidbody rBody;
     private bool grounded;
-    private float distToGround = 0;
-    public float jumpSpeed = 8.0F;
+    private float distToGround;
+    public float jumpSpeed;
+    public int jumpHeight;
+    private Vector3 velocity;
 
-    //void Update()
-    //{
-    //    CharacterController controller = GetComponent<CharacterController>();
+    // Use this for initialization
+    void Start()
+    {
+        if (GetComponent<Rigidbody>())
+        {
+            rBody = GetComponent<Rigidbody>();
+        }
+        else
+        {
+            Debug.LogError("The character needs a rigidBody.");
+        }
 
-    //    moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, 0);
-    //    moveDirection = transform.TransformDirection(moveDirection);
-    //    moveDirection *= speed;
-
-    //    //moveDirection.y -= gravity * Time.deltaTime;
-    //    moveDirection.y -= gravity;
-    //    controller.Move(moveDirection * Time.deltaTime);
-    //}
-
-
-    //float gravity = -9.8f;
-
-    //void Update()
-    //{
-    //    Rigidbody rb = this.GetComponent<Rigidbody>();
-    //    rb.velocity.y += gravity * Time.deltaTime;
-    //}
-
-    //public void ReverseGravity()
-    //{
-    //    gravity = -gravity;
-    //}
+    }
 
     void Update()
     {
@@ -45,27 +33,55 @@ public class basicMovement : MonoBehaviour {
         pos.z = 0;
         transform.position = pos;
 
+        //Keep if needed
+        //if (Input.GetKey(KeyCode.A))
+        //{
+        //    if (rBody.velocity.x > -5)
+        //        rBody.AddForce(new Vector3(-60, 0, 0));
+        //}
+
+        //if (Input.GetKey(KeyCode.D))
+        //{
+        //    if (rBody.velocity.x < 5)
+        //        rBody.AddForce(new Vector3(60, 0, 0));
+        //}
+
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    //need to figure out something to make player jump and fall faster...changing mass doesn't work too well
+
+        //    rBody.AddForce(Vector3.up * 1200);
+
+        //    //also need to check ifGrounded for Rigidbody
+        //    //if (CheckIfGrounded())
+        //    //{
+        //    //    rBody.AddForce(Vector3.up * 1200);
+        //    //}
+        //}
+
+
         if (Input.GetKey(KeyCode.A))
         {
-            Rigidbody rb = this.GetComponent<Rigidbody>();
-            if (rb.velocity.x > -5)
-                rb.AddForce(new Vector3(-10, 0, 0));
+            if (rBody.velocity.x > -5)
+                rBody.AddForce(new Vector3(-60, 0, 0));
         }
 
         if (Input.GetKey(KeyCode.D))
         {
-            Rigidbody rb = this.GetComponent<Rigidbody>();
-            if (rb.velocity.x < 5)
-                rb.AddForce(new Vector3(10, 0, 0));
+            if (rBody.velocity.x < 5)
+                rBody.AddForce(new Vector3(60, 0, 0));
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Rigidbody rb = this.GetComponent<Rigidbody>();
-            rb.AddForce(new Vector3(0, 8f, 0), ForceMode.Impulse);
+            //need to figure out something to make player jump and fall faster...changing mass doesn't work too well
+
+            rBody.AddForce(Vector3.up * 1200);
+
+            //also need to check ifGrounded for Rigidbody
             //if (CheckIfGrounded())
             //{
-            //    rb.AddForce(new Vector3(0, jumpSpeed, 0));
+            //    rBody.AddForce(Vector3.up * 1200);
             //}
         }
 
@@ -73,14 +89,19 @@ public class basicMovement : MonoBehaviour {
 
     void FixedUpdate()
     {
-       
+
     }
 
     //private bool CheckIfGrounded()
     //{
-    //    Rigidbody rb = this.GetComponent<Rigidbody>();
-    //    grounded = Physics.Raycast(rb.position - Physics.gravity.normalized * .05f, Physics.gravity.normalized, distToGround + 0.1f);
+    //    //Rigidbody rb = this.GetComponent<Rigidbody>();
+    //    grounded = Physics.Raycast(rBody.position - Physics.gravity.normalized * .05f, Physics.gravity.normalized, distToGround + 0.1f);
     //    return grounded;
+    //}
+
+    //private bool CheckIfGrounded()
+    //{
+    //    return Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.1f);
     //}
 
 }
