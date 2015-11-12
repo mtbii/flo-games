@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Assets.FuseModel.Scripts;
 using System.Collections;
 using System;
 
@@ -30,9 +31,9 @@ public class CameraController : MonoBehaviour {
     
     void MoveToTarget()
     {
-        destination = target.transform.position + Quaternion.Euler(0,0, ((SideScrollCharacterController)target).Roll)*offsetFromTarget;
+        destination = target.transform.position + Quaternion.Euler(0,0, ((SideScrollCharacterController)target).GravityDirection.ToAngle())*offsetFromTarget;
         transform.position = destination;
-        transform.rotation = Quaternion.Euler(0, 0, ((SideScrollCharacterController)target).Roll);
+        transform.rotation = Quaternion.Euler(0, 0, ((SideScrollCharacterController)target).GravityDirection.ToAngle());
     }
 
     void LookAtTarget()
