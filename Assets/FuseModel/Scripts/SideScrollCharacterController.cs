@@ -7,16 +7,28 @@ public class SideScrollCharacterController : MonoBehaviour
 {
     public float inputDeadzone = 0.1f;
     public float forwardVel = 1;
+    public float gravityTurnTime = 1;
 
     private float forwardInput;
     private Rigidbody rBody;
     private Animator animator;
     private bool grounded;
 
+    private float startRotationTime = 0;
+    private float rotationParam = 0;
+
+    private Vector3 lastVelocity;
+    private RotationDirection lastTurnDirection;
     private Direction gravityDir;
     private float distToGround = 0;
     private bool gravityChanged = false;
     private bool facingForward = true;
+
+    public enum RotationDirection
+    {
+        Clockwise,
+        CounterClockwise
+    }
 
     public enum Direction
     {
@@ -26,6 +38,17 @@ public class SideScrollCharacterController : MonoBehaviour
         Left
     }
 
+    public RotationDirection LastTurnDirection
+    {
+        get
+        {
+            return lastTurnDirection;
+        }
+        private set
+        {
+            lastTurnDirection = value;
+        }
+    }
     public Direction GravityDirection
     {
         get { return gravityDir; }
@@ -86,27 +109,38 @@ public class SideScrollCharacterController : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.E))
         {
-            //rBody.position -= Physics.gravity.normalized;
-            //Quaternion worldDelta = Quaternion.Euler(0, 0, -90);
-            //Physics.gravity = worldDelta * Physics.gravity;
-
+            //Changing GravityDirection sets gravityChanged to true
             GravityDirection = GravityDirection.TurnClockwise();
+            lastTurnDirection = RotationDirection.Clockwise;
+            startRotationTime = Time.realtimeSinceStartup;
+
+            if (grounded)
+                transform.position += transform.up.normalized;
+
+            lastVelocity = rBody.velocity;
+            rBody.velocity = Vector3.zero;
         }
 
         if (Input.GetKeyUp(KeyCode.Q))
         {
-            //rBody.position -= Physics.gravity.normalized;
-            //Quaternion worldDelta = Quaternion.Euler(0, 0, 90);
-            //Physics.gravity = worldDelta * Physics.gravity;
-
+            //Changing GravityDirection sets gravityChanged to true
             GravityDirection = GravityDirection.TurnCounterClockwise();
+            lastTurnDirection = RotationDirection.CounterClockwise;
+            startRotationTime = Time.realtimeSinceStartup;
+
+            if (grounded)
+                transform.position += transform.up.normalized;
+
+            lastVelocity = rBody.velocity;
+            rBody.velocity = Vector3.zero;
         }
     }
 
     // Update is called once per frame
     void Update()
     {
-        GetInput();
+        if (!gravityChanged)
+            GetInput();
     }
 
     void FixedUpdate()
@@ -119,41 +153,69 @@ public class SideScrollCharacterController : MonoBehaviour
             animator.SetFloat("AirVelocity", rBody.velocity.y); //local y
         }
 
-        //This prevents a bug with Euler angles
         if (gravityChanged)
         {
-            UpdateGravity();
+            AnimateRotation();
         }
-
-        UpdateCharacter();
+        else
+        {
+            UpdateCharacterPosition();
+        }
     }
 
-    private void UpdateGravity()
+    private void AnimateRotation()
+    {
+        //Two seconds for turning animation
+        if (Time.realtimeSinceStartup - startRotationTime < gravityTurnTime)
+        {
+            //Vector3 angles = transform;
+            float turnAngle = facingForward ? -90.0f : 90.0f;
+
+            if (lastTurnDirection == RotationDirection.Clockwise)
+            {
+                turnAngle = -turnAngle;
+            }
+
+            //Rotate around character's local x axis (global z axis)
+            //angles.x += (turnAngle / gravityTurnTime) * Time.fixedDeltaTime; // (angles / time) * time = angles, dimensions match
+
+            transform.rotation *= Quaternion.AngleAxis((turnAngle / gravityTurnTime) * Time.fixedDeltaTime, Vector3.right); //Quaternion.Euler(angles);
+        }
+        else
+        {
+            //This locks the rotation with the right orientation
+            UpdateCharacterRotation();
+            gravityChanged = false;
+            rBody.velocity = lastVelocity;
+        }
+    }
+
+    private void UpdateCharacterRotation()
     {
         Vector3 angles = transform.eulerAngles;
+        float angleY = facingForward ? 90 : -90;
 
         //Rotate around character's local x axis (global z axis)
         switch (GravityDirection)
         {
             case Direction.Down:
-                angles.x = 0;
+                angles = new Vector3(0, angleY, 0);
                 break;
 
             case Direction.Right:
-                angles.x = facingForward ? 270 : 90;
+                angles = facingForward ? new Vector3(270, 90, 0) : new Vector3(90, angleY, 0);
                 break;
 
             case Direction.Up:
-                angles.x = 180;
+                angles = new Vector3(180, angleY, 0);
                 break;
 
             case Direction.Left:
-                angles.x = facingForward ? 90 : 270;
+                angles = facingForward ? new Vector3(90, angleY, 0) : new Vector3(270, angleY, 0);
                 break;
         }
 
         transform.rotation = Quaternion.Euler(angles);
-        gravityChanged = false;
     }
 
     private void CheckIfGrounded()
@@ -161,7 +223,7 @@ public class SideScrollCharacterController : MonoBehaviour
         grounded = Physics.Raycast(rBody.position - GravityDirection.ToVector3() * .05f, GravityDirection.ToVector3(), distToGround + 0.1f);
     }
 
-    void UpdateCharacter()
+    void UpdateCharacterPosition()
     {
         Vector3 forward = GravityDirection.TurnCounterClockwise().ToVector3();
 
