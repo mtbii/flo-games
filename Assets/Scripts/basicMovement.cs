@@ -32,34 +32,10 @@ public class basicMovement : MonoBehaviour
         Vector3 pos = transform.position;
         pos.z = 0;
         transform.position = pos;
+       
+        //******Change to four main 'if' statements: 1 for each gravity direction*********
 
-        //Keep if needed
-        //if (Input.GetKey(KeyCode.A))
-        //{
-        //    if (rBody.velocity.x > -5)
-        //        rBody.AddForce(new Vector3(-60, 0, 0));
-        //}
-
-        //if (Input.GetKey(KeyCode.D))
-        //{
-        //    if (rBody.velocity.x < 5)
-        //        rBody.AddForce(new Vector3(60, 0, 0));
-        //}
-
-        //if (Input.GetKeyDown(KeyCode.Space))
-        //{
-        //    //need to figure out something to make player jump and fall faster...changing mass doesn't work too well
-
-        //    rBody.AddForce(Vector3.up * 1200);
-
-        //    //also need to check ifGrounded for Rigidbody
-        //    //if (CheckIfGrounded())
-        //    //{
-        //    //    rBody.AddForce(Vector3.up * 1200);
-        //    //}
-        //}
-
-
+        //Movement mechanics for gravity-up and gravity-down (they are the same)
         if (Input.GetKey(KeyCode.A))
         {
             if (rBody.velocity.x > -5)
@@ -72,25 +48,57 @@ public class basicMovement : MonoBehaviour
                 rBody.AddForce(new Vector3(60, 0, 0));
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        //Movement mechanics for gravity-right
+        if (Physics.gravity == (Vector3.right * 25f))
         {
-            //need to figure out something to make player jump and fall faster...changing mass doesn't work too well
+            if (Input.GetKey(KeyCode.A))
+                rBody.AddForce(new Vector3(0, -60, 0));
 
-            rBody.AddForce(Vector3.up * 1200);
-
-            //also need to check ifGrounded for Rigidbody
-            //if (CheckIfGrounded())
-            //{
-            //    rBody.AddForce(Vector3.up * 1200);
-            //}
+            if (Input.GetKey(KeyCode.D))
+                rBody.AddForce(new Vector3(0, 60, 0));
         }
 
+        //Movement mechanics for gravity-left
+        if (Physics.gravity == (-Vector3.right * 25f))
+        {
+            if (Input.GetKey(KeyCode.A))
+                rBody.AddForce(new Vector3(0, 60, 0));
+
+            if (Input.GetKey(KeyCode.D))
+                rBody.AddForce(new Vector3(0, -60, 0));
+        }
+
+        //Jumping mechanics
+        if (Physics.gravity == (Vector3.up * 25f))
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+                rBody.AddForce(-Vector3.up * 1200);
+        }
+
+        if (Physics.gravity == (-Vector3.up * 25f))
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+                rBody.AddForce(Vector3.up * 1200);
+        }
+
+
+        if (Physics.gravity == (Vector3.right * 25f))
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+                rBody.AddForce(-Vector3.right * 1200);
+        }
+
+        if (Physics.gravity == (-Vector3.right * 25f))
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+                rBody.AddForce(Vector3.right * 1200);
+        }
     }
 
-    void FixedUpdate()
-    {
+    //void FixedUpdate()
+    //{
 
-    }
+    //}
 
     //private bool CheckIfGrounded()
     //{
