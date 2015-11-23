@@ -8,6 +8,6 @@ public class Goal : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         Debug.Log("Hit");
-        player.Reset();
+        //player.Reset();
     }
 }
