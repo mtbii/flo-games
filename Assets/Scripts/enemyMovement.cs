@@ -15,6 +15,11 @@ public class enemyMovement : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
+        //make sure object does not change position on z-axis
+        Vector3 pos = transform.position;
+        pos.z = 0;
+        transform.position = pos;
+
         //roate to look at the player
         transform.LookAt(target.position);
         transform.Rotate(new Vector3(0, -90, 0), Space.Self);   //correcting the original rotation

@@ -12,6 +12,7 @@ public class basicMovement : MonoBehaviour
     public float jumpSpeed;
     public int jumpHeight;
     private Vector3 velocity;
+    
 
     // Use this for initialization
     void Start()
@@ -25,10 +26,12 @@ public class basicMovement : MonoBehaviour
             Debug.LogError("The character needs a rigidBody.");
         }
 
+        //distToGround = sphereCollider
     }
 
     void Update()
     {
+        //Makes sure player does not have movement along z-axis
         Vector3 pos = transform.position;
         pos.z = 0;
         transform.position = pos;

@@ -21,22 +21,26 @@ public class gravityChange : MonoBehaviour
         }
 
         Physics.gravity = -Vector3.up * 25f;
+        //rBody.AddForce(-Vector3.up * 25f);
     }
 
     void FixedUpdate()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
             Physics.gravity = Vector3.up * 25f;
+            //rBody.AddForce(Vector3.up * 25f);
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
             Physics.gravity = -Vector3.up * 25f;
-
+            //rBody.AddForce(-Vector3.up * 25f);
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
             Physics.gravity = -Vector3.right * 25f;
+            //rBody.AddForce(-Vector3.right * 25f);
 
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
             Physics.gravity = Vector3.right * 25f;
+            //rBody.AddForce(Vector3.right * 25f);
     }
 }
