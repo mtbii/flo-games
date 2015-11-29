@@ -21,6 +21,7 @@ public class SideScrollCharacterController : MonoBehaviour
     private RotationDirection lastTurnDirection;
     private Direction gravityDir;
     private float distToGround = 0;
+    private bool gravityChanged = false;
     private bool facingForward = true;
 
     public enum RotationDirection
@@ -97,20 +98,17 @@ public class SideScrollCharacterController : MonoBehaviour
             if (facingForward && forwardInput < 0)
             {
                 transform.rotation *= Quaternion.AngleAxis(-180, Vector3.up);
-            facingForward = false;
-        }
+                facingForward = false;
+            }
 
-        else if (!facingForward && forwardInput > 0)
-        {
-            transform.rotation *= Quaternion.AngleAxis(180, Vector3.up);
-            facingForward = true;
-        }
+            else if (!facingForward && forwardInput > 0)
+            {
+                transform.rotation *= Quaternion.AngleAxis(180, Vector3.up);
+                facingForward = true;
+            }
         }
 
         if (Input.GetKeyUp(KeyCode.E))
-        forwardInput = Mathf.Abs(forwardInput);
-
-        if(Input.GetButtonUp("Jump"))
         {
             //Changing GravityDirection sets gravityChanged to true
             GravityDirection = GravityDirection.TurnClockwise();
@@ -137,13 +135,21 @@ public class SideScrollCharacterController : MonoBehaviour
             lastVelocity = rBody.velocity;
             rBody.velocity = Vector3.zero;
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (grounded)
+            {
+                rBody.velocity = new Vector3(0, 8f, 0);
+            }
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
         if (!gravityChanged)
-        GetInput();
+            GetInput();
     }
 
     void FixedUpdate()
