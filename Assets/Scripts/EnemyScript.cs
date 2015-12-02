@@ -5,6 +5,7 @@ public class EnemyScript : MonoBehaviour
 {
     public float speed = 3f;
     public float gravity = 9.8f;
+    public float rotationSpeed = 5.0f;
     public Transform target;    //set target from inspector instead of looking in Update
     private CharacterController cont;
 
@@ -25,13 +26,22 @@ public class EnemyScript : MonoBehaviour
         transform.position = pos;
 
         //roate to look at the player
-        transform.LookAt(target.position);
-        transform.Rotate(new Vector3(0, -90, 0), Space.Self);   //correcting the original rotation
+        //transform.LookAt(target.position);
+        //transform.Rotate(new Vector3(0, -90, 0), Space.Self);   //correcting the original rotation
+        //Vector3 moveDirection = target.position - transform.position;
+        //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(moveDirection), rotationSpeed * Time.deltaTime);
+        //transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
+        //Vector3 forward = transform.TransformDirection(Vector3.forward);
+        //moveDirection = forward * speed;
+        //cont.SimpleMove(moveDirection);
 
-        Vector3 moveDirection = target.position - transform.position;
+
+        //Vector3 moveDirection = target.position - transform.position;
+
         //moveDirection = transform.TransformDirection(moveDirection);
-        moveDirection.y -= gravity * Time.deltaTime;
-        cont.Move(moveDirection.normalized * Time.deltaTime * speed);
+        //moveDirection.y -= gravity * Time.deltaTime;
+
+        //cont.SimpleMove(moveDirection.normalized * Time.deltaTime * speed);
         //cont.Move(moveDirection * speed);
 
 

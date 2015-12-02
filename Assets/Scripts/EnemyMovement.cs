@@ -2,117 +2,118 @@
 using System.Collections;
 
 public class EnemyMovement : MonoBehaviour {
-
-    //public int speed = 5;
-    //public float gravity = 20;
-    //public Vector3 moveSpeed;
-    //public Transform target;
-
-    //void Update()
-    //{
-    //    Move();
-    //}
-
-    //void Move()
-    //{
-    //    CharacterController character = GetComponent<CharacterController>();
-
-    //    if(character.isGrounded)
-    //    {
-    //        Vector3 delta = target.transform.position - transform.position;
-    //        //delta.y = 0;
-    //        delta.Normalize();
-    //        transform.forward = delta;
-    //        moveSpeed = delta * speed;
-    //    }
-
-    //    moveSpeed.y -= gravity * Time.deltaTime;
-    //    character.Move(moveSpeed * Time.deltaTime);
-    //}
-
-    //public float speed = 6f;
-    //public float gravity = 20f;
-    //public int horizontal;
-    //private Vector3 moveDirection = Vector3.zero;
-
-    //void Update()
-    //{
-    //    CharacterController controller = GetComponent<CharacterController>();
-
-    //    if (Input.GetKey(KeyCode.A))
-    //        horizontal = -1;
-
-    //    if (Input.GetKey(KeyCode.D))
-    //        horizontal = 1;
-
-    //    if(controller.isGrounded)
-    //    {
-    //        moveDirection = new Vector3(horizontal, 0, 0);
-    //        moveDirection = transform.TransformDirection(moveDirection);
-    //        moveDirection *= speed;
-    //    }
-
-    //    moveDirection.y -= gravity * Time.deltaTime;
-    //    controller.Move(moveDirection * Time.deltaTime);
-    //}
-
-    public float speed = 3.0f;
-    public float rotateSpeed = 3.0f;
-    public float gravity = 9.8f;
+    
+    public Transform target;
+    public Transform[] waypoints;
+    private Vector3 waypointTarget;
+    private int currentWaypoint = 0;
+    private bool waypointLoop = true;
+    private float chaseSpeed = 10;
+    private float patrolSpeed = 16;
+    private float pauseDuration = 1;
+    private float dampLook = 5f;
+    private float waypointTime;
+    private float chaseRange = 1f;
     private CharacterController cont;
-    public GameObject target;
-    private Vector3 direction = Vector3.zero;
-    private float distMag;
-    private Quaternion rot;
-    private float chaseRange = 10f;
+    private Vector3 moveDirection = Vector3.zero;
+    private float enemyDistance;
 
     void Start()
     {
         cont = GetComponent<CharacterController>();
-        target = GameObject.FindWithTag("Player");
     }
 
     void Update()
     {
-        //find player direction
-        direction = target.transform.position - transform.position;
-        //make it strictly horizontal
-        direction.y = 0;
-        //measure distance
-        distMag = direction.magnitude;
+        //make sure object does not change position on z-axis
+        Vector3 pos = transform.position;
+        pos.z = 0;
+        transform.position = pos;
 
-        if (distMag > chaseRange)
+        enemyDistance = Vector3.Distance(transform.position, target.position);
+        Debug.LogError("enemyDistance = " + enemyDistance);
+
+        if (currentWaypoint < waypoints.Length)
         {
-            //idle state or patrol area?
-            //use waypoints for this
+            if (enemyDistance > 1.5f)
+                Patrol();
+
+            else if ((enemyDistance <= 1.5f) && (target.position.y > transform.position.y))
+                Patrol();
+
+            else
+                Chase();
         }
 
         else
         {
-            //chase state
-            rot = Quaternion.LookRotation(direction);
-            //find target direction and rotate gradually to it
-            transform.rotation = Quaternion.Slerp(transform.rotation, rot, rotateSpeed * Time.deltaTime);
-            //cont.SimpleMove(transform.forward * speed);
-            cont.Move(transform.forward * speed);
+            if (waypointLoop)
+                currentWaypoint = 0;
+        }
 
+    }
+
+    void Patrol()
+    {
+        waypointTarget = waypoints[currentWaypoint].position;
+        waypointTarget.y = transform.position.y;
+        moveDirection = waypointTarget - transform.position;
+
+        if (moveDirection.magnitude < 0.5)
+        {
+            if (waypointTime == 0)
+                waypointTime = Time.time;   //Pause over the waypoint
+
+            if ((Time.time - waypointTime) >= pauseDuration)
+            {
+                currentWaypoint++;
+                waypointTime = 0;
+            }
+
+        }
+
+        else
+        {
+            moveDirection = waypointTarget - transform.position;
+            Quaternion rotation = Quaternion.LookRotation(waypointTarget - transform.position);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * dampLook);
+            cont.SimpleMove(moveDirection.normalized * patrolSpeed * Time.deltaTime);
         }
     }
 
-    //private float speed = 3f;
-    //private float rotateSpeed = 3f;
-    //private CharacterController cont;
-    //private Vector3 simGravity;
+    void Chase()
+    {
+        float dist1 = Vector3.Distance(transform.position, waypoints[0].position);
+        float dist2 = Vector3.Distance(transform.position, waypoints[1].position);
+        float minDist = Mathf.Min(dist1, dist2);
 
-    //void Start()
-    //{
-    //    simGravity = new Vector3(0, -9.8f, 0);
-    //}
+        //TODO Fix issue with enemy chasing player, then going out of it's "chase radius" where it is supposed to go back to nearest waypoint
+        if (chaseRange > minDist)
+        {
+            moveDirection = target.position - transform.position;
+            Quaternion rotation = Quaternion.LookRotation(target.position - transform.position);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * dampLook);
+            cont.SimpleMove(moveDirection.normalized * chaseSpeed * Time.deltaTime);
+        }
 
-    //void Update()
-    //{
-    //    cont = GetComponent<CharacterController>();
-    //    cont.SimpleMove(simGravity);
-    //}
+        else
+        {
+            if (dist1 < dist2)
+            {
+                moveDirection = waypoints[0].position - transform.position;
+                Quaternion rotation = Quaternion.LookRotation(waypoints[0].position - transform.position);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * dampLook);
+                cont.SimpleMove(moveDirection.normalized * patrolSpeed * Time.deltaTime);
+            }
+
+            if (dist2 < dist1)
+            {
+                moveDirection = waypoints[1].position - transform.position;
+                Quaternion rotation = Quaternion.LookRotation(waypoints[1].position - transform.position);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * dampLook);
+                cont.SimpleMove(moveDirection.normalized * patrolSpeed * Time.deltaTime);
+            }
+        }   
+    }
 }
 
