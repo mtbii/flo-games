@@ -13,6 +13,6 @@ public class GUIScript : MonoBehaviour {
 
 	void OnGUI()
 	{
-		GUI.Box(new Rect(Screen.width/2-Screen.width/10, 0, Screen.width/5, Screen.height/20), "Time: " + time.ToString("0.00"));
+		GUI.Box(new Rect(Screen.width/2-Screen.width/10, 0, Screen.width/5, Screen.height/15), "Time: " + time.ToString("0.00"));
 	}
 }
