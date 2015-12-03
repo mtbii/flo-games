@@ -147,7 +147,6 @@ public class SideScrollCharacterController : MonoBehaviour
     {
         if (animator)
         {
-            CheckIfGrounded();
             animator.SetFloat("Speed", Mathf.Abs(forwardInput) * 3);
             animator.SetBool("Grounded", grounded);
             animator.SetFloat("AirVelocity", rBody.velocity.y); //local y
@@ -216,18 +215,6 @@ public class SideScrollCharacterController : MonoBehaviour
         }
 
         transform.rotation = Quaternion.Euler(angles);
-    }
-
-    private void CheckIfGrounded()
-    {
-        //RaycastHit[] hits = Physics.RaycastAll(rBody.position - GravityDirection.ToVector3() * .05f, GravityDirection.ToVector3(), distToGround + 10f);
-
-        //foreach (var hit in hits)
-        //{
-        //    Debug.Log(hit.collider.name + " " + hit.distance);
-        //}
-
-
     }
 
     void OnCollisionEnter()
