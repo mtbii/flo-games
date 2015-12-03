@@ -23,6 +23,9 @@ public class SideScrollCharacterController : MonoBehaviour
     private float distToGround = 0.0f;
     private bool gravityChanged = false;
     private bool facingForward = true;
+    private bool isLeavingGround = false;
+    private bool wasGrounded = false;
+    private Vector3 forwardDir;
 
     public enum RotationDirection
     {
@@ -63,6 +66,9 @@ public class SideScrollCharacterController : MonoBehaviour
             }
         }
     }
+
+    public bool IsDead { get; internal set; }
+    public bool HasWon { get; internal set; }
 
     // Use this for initialization
     void Start()
@@ -107,6 +113,7 @@ public class SideScrollCharacterController : MonoBehaviour
             }
         }
 
+        wasGrounded = false;
         if (Input.GetKeyUp(KeyCode.E))
         {
             //Changing GravityDirection sets gravityChanged to true
@@ -115,7 +122,10 @@ public class SideScrollCharacterController : MonoBehaviour
             startRotationTime = Time.realtimeSinceStartup;
 
             if (grounded)
-                transform.position += transform.up.normalized;
+            {
+                wasGrounded = true;
+                transform.position += transform.localScale.y * transform.up.normalized;
+            }
 
             lastVelocity = rBody.velocity;
             rBody.velocity = Vector3.zero;
@@ -129,7 +139,10 @@ public class SideScrollCharacterController : MonoBehaviour
             startRotationTime = Time.realtimeSinceStartup;
 
             if (grounded)
+            {
+                wasGrounded = true;
                 transform.position += transform.localScale.y * transform.up.normalized;
+            }
 
             lastVelocity = rBody.velocity;
             rBody.velocity = Vector3.zero;
@@ -140,7 +153,10 @@ public class SideScrollCharacterController : MonoBehaviour
     void Update()
     {
         if (!gravityChanged)
+        {
             GetInput();
+            UpdateCharacterPosition();
+        }
     }
 
     void FixedUpdate()
@@ -156,10 +172,11 @@ public class SideScrollCharacterController : MonoBehaviour
         {
             AnimateRotation();
         }
-        else
-        {
-            UpdateCharacterPosition();
-        }
+        //else
+        //{
+        //    GetInput();
+        //    UpdateCharacterPosition();
+        //}
     }
 
     private void AnimateRotation()
@@ -169,14 +186,21 @@ public class SideScrollCharacterController : MonoBehaviour
         {
             //Vector3 angles = transform;
             float turnAngle = facingForward ? -90.0f : 90.0f;
+            var lastGravityDirection = GravityDirection;
 
             if (lastTurnDirection == RotationDirection.Clockwise)
             {
+                lastGravityDirection = lastGravityDirection.TurnCounterClockwise();
                 turnAngle = -turnAngle;
+            }
+            else
+            {
+                lastGravityDirection = lastGravityDirection.TurnClockwise();
             }
 
             //Rotate around character's local x axis (global z axis)
             //angles.x += (turnAngle / gravityTurnTime) * Time.fixedDeltaTime; // (angles / time) * time = angles, dimensions match
+            var posDelta = 10 * transform.localScale.y * lastGravityDirection.ToVector3();
 
             transform.rotation *= Quaternion.AngleAxis((turnAngle / gravityTurnTime) * Time.fixedDeltaTime, Vector3.right); //Quaternion.Euler(angles);
         }
@@ -185,6 +209,7 @@ public class SideScrollCharacterController : MonoBehaviour
             //This locks the rotation with the right orientation
             UpdateCharacterRotation();
             gravityChanged = false;
+            wasGrounded = false;
             rBody.velocity = lastVelocity;
         }
     }
@@ -217,49 +242,97 @@ public class SideScrollCharacterController : MonoBehaviour
         transform.rotation = Quaternion.Euler(angles);
     }
 
-    void OnCollisionEnter()
+    void OnCollisionEnter(Collision collision)
     {
-        grounded = true;
-
+        if (collision.gameObject.tag == "Level")
+        {
+            isLeavingGround = false;
+            grounded = true;
+        }
     }
 
-    void OnCollisionExit()
+    void OnCollisionStay(Collision collision)
     {
-        grounded = false;
+        if (collision.gameObject.tag == "Level")
+        {
+            Vector3 normal = new Vector3();
+            foreach (var contact in collision.contacts)
+            {
+                normal += contact.normal;
+            }
+            normal /= collision.contacts.Length;
+            normal.Normalize();
+
+            forwardDir = Vector3.Cross(Vector3.back, normal).normalized;
+
+            if (Vector3.Angle(GravityDirection.ToVector3(), forwardDir) < 150)
+            {
+                forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
+            }
+        }
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag == "Level")
+        {
+            isLeavingGround = true;
+
+            //After 1/10 of a second
+            StartCoroutine(ExecuteWithDelay(0.1f, () =>
+            {
+                if (isLeavingGround)
+                {
+                    grounded = false;
+                    isLeavingGround = false;
+                }
+            }));
+        }
+    }
+
+    IEnumerator ExecuteWithDelay(float time, Action action)
+    {
+        yield return new WaitForSeconds(time);
+
+        if (action != null)
+        {
+            action();
+        }
     }
 
     void UpdateCharacterPosition()
     {
-        Vector3 forward = GravityDirection.TurnCounterClockwise().ToVector3();
+        if (!grounded)
+            forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
 
+        float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
         if (Mathf.Abs(forwardInput) > inputDeadzone)
         {
-            float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
-            rBody.velocity += forward * forwardVel * (facingForward ? 1 : -1) * 10 * Time.fixedDeltaTime;
-            float moveSpeed = Vector3.Dot(rBody.velocity, forward);
+            rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * 10 * Time.fixedDeltaTime;
+            float moveSpeed = Vector3.Dot(rBody.velocity, forwardDir);
 
             if (grounded)
             {
                 if (Mathf.Abs(moveSpeed) > forwardVel)
                 {
-                    rBody.velocity = gravityVel * GravityDirection.ToVector3() + forward * forwardVel * (facingForward ? 1 : -1);
+                    rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel * (facingForward ? 1 : -1);
                 }
             }
             else
             {
                 if (moveSpeed > 0 && forwardInput > 0 || moveSpeed < 0 && forwardInput < 0)
                 {
-                    rBody.velocity += forward * forwardVel * (facingForward ? 1 : -1) * (1.0f / 320f) * Time.fixedDeltaTime;
+                    rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * (1.0f / 320f) * Time.fixedDeltaTime;
 
                     if (Mathf.Abs(moveSpeed) > forwardVel)
                     {
-                        rBody.velocity = gravityVel * GravityDirection.ToVector3() + forward * forwardVel;
+                        rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel;
                     }
                 }
                 else if (moveSpeed < 0 && forwardInput > 0 || moveSpeed > 0 && forwardInput < 0)
                 {
-                    Vector3 moveFactor = moveSpeed * forward * (1 - 32 * Time.fixedDeltaTime);
-                    float newMoveSpeed = Vector3.Dot(moveFactor, forward);
+                    Vector3 moveFactor = moveSpeed * forwardDir * (1 - 32 * Time.fixedDeltaTime);
+                    float newMoveSpeed = Vector3.Dot(moveFactor, forwardDir);
 
                     if (Math.Abs(newMoveSpeed) > forwardVel / 4.0)
                     {
@@ -272,7 +345,8 @@ public class SideScrollCharacterController : MonoBehaviour
         {
             if (grounded)
             {
-                float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
+                //float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
+                //rBody.velocity = gravityVel * GravityDirection.ToVector3();
                 rBody.velocity = gravityVel * GravityDirection.ToVector3();
             }
         }

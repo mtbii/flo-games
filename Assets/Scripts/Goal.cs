@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts;
 
 public class Goal : MonoBehaviour
 {
@@ -7,7 +8,6 @@ public class Goal : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Hit");
-        player.Reset();
+        GameManager.instance.PlayerWon();
     }
 }

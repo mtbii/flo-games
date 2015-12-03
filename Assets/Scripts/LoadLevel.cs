@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts;
 
-public class LoadLevel : MonoBehaviour {
+public class LoadLevel : MonoBehaviour
+{
 
     public Transform target;
     private Rigidbody rBody;
@@ -11,7 +13,7 @@ public class LoadLevel : MonoBehaviour {
         rBody = GetComponent<Rigidbody>();
     }
 
-	void Update()
+    void Update()
     {
 
     }
@@ -19,6 +21,7 @@ public class LoadLevel : MonoBehaviour {
     void OnCollisionEnter(Collision coll)
     {
         if (coll.gameObject.tag == "enemy")
-            Application.LoadLevel(Application.loadedLevel);
+            GameManager.instance.KillPlayer("Eraser");
+        //Application.LoadLevel(Application.loadedLevel);
     }
 }
