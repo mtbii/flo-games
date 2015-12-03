@@ -233,6 +233,7 @@ public class SideScrollCharacterController : MonoBehaviour
     void OnCollisionEnter()
     {
         grounded = true;
+
     }
 
     void OnCollisionExit()
