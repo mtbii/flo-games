@@ -172,6 +172,8 @@ public class SideScrollCharacterController : MonoBehaviour
         {
             AnimateRotation();
         }
+
+        Debug.Log(rBody.velocity);
         //else
         //{
         //    GetInput();
