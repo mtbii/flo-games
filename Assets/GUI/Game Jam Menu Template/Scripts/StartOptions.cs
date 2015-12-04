@@ -64,8 +64,55 @@ public class StartOptions : MonoBehaviour {
 
 	}
 
+    public void Level_1Selected()
+    {
+        playMusic.FadeDown(fadeColorAnimationClip.length);
+        Invoke("PlayNewMusic", fadeAlphaAnimationClip.length);
+        Invoke("LoadDelayedLevel_1", fadeColorAnimationClip.length * .5f);
+        animColorFade.SetTrigger("fade");
+    }
 
-	public void LoadDelayed()
+    public void Level_2Selected()
+    {
+        playMusic.FadeDown(fadeColorAnimationClip.length);
+        Invoke("PlayNewMusic", fadeAlphaAnimationClip.length);
+        Invoke("LoadDelayedLevel_2", fadeColorAnimationClip.length * .5f);
+        animColorFade.SetTrigger("fade");
+    }
+
+    public void Level_3Selected()
+    {
+        playMusic.FadeDown(fadeColorAnimationClip.length);
+        Invoke("PlayNewMusic", fadeAlphaAnimationClip.length);
+        Invoke("LoadDelayedLevel_3", fadeColorAnimationClip.length * .5f);
+        animColorFade.SetTrigger("fade");
+    }
+
+    public void LoadDelayedLevel_1()
+    {
+        inMainMenu = false;
+        showPanels.HideLevelSelectPanel();
+        showPanels.HideMenu();
+        Application.LoadLevel(sceneToStart);
+    }
+
+    public void LoadDelayedLevel_2()
+    {
+        inMainMenu = false;
+        showPanels.HideLevelSelectPanel();
+        showPanels.HideMenu();
+        Application.LoadLevel(sceneToStart + 1);
+    }
+
+    public void LoadDelayedLevel_3()
+    {
+        inMainMenu = false;
+        showPanels.HideLevelSelectPanel();
+        showPanels.HideMenu();
+        Application.LoadLevel(sceneToStart + 2);
+    }
+
+    public void LoadDelayed()
 	{
 		//Pause button now works if escape is pressed since we are no longer in Main menu.
 		inMainMenu = false;
