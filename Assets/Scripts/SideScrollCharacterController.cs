@@ -14,7 +14,12 @@ public class SideScrollCharacterController : MonoBehaviour
     private float forwardInput;
     private Rigidbody rBody;
     private Animator animator;
+
+    //Collision flags
     private bool grounded;
+    public bool feetTouching;
+    public bool bodyTouching;
+
     private float terminalVelocity = 7;
     private float terminalLandSpeed = 1;
 
@@ -138,7 +143,8 @@ public class SideScrollCharacterController : MonoBehaviour
             if (grounded)
             {
                 wasGrounded = true;
-                transform.position += transform.localScale.y * transform.up.normalized;
+                //transform.position += transform.localScale.y * transform.up.normalized;
+                grounded = false;
             }
 
             lastVelocity = rBody.velocity;
@@ -155,7 +161,8 @@ public class SideScrollCharacterController : MonoBehaviour
             if (grounded)
             {
                 wasGrounded = true;
-                transform.position += transform.localScale.y * transform.up.normalized;
+                //transform.position += transform.localScale.y * transform.up.normalized;
+                grounded = false;
             }
 
             lastVelocity = rBody.velocity;
@@ -166,6 +173,15 @@ public class SideScrollCharacterController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //De-bounce the grounding (for un-even terrain)
+        if (grounded != feetTouching)
+        {
+            StartCoroutine(ExecuteWithDelay(0.1f, () =>
+            {
+                grounded = feetTouching;
+            }));
+        }
+
         if (!gravityChanged)
         {
             GetInput();
@@ -257,76 +273,109 @@ public class SideScrollCharacterController : MonoBehaviour
         transform.rotation = Quaternion.Euler(angles);
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Level")
-        {
-            for (int i = 0; i < collision.contacts.Length; i++)
-            {
-                var contact = collision.contacts[i];
-                if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90)
-                {
-                    grounded = false;
-                    return;
-                }
-            }
+    //void OnCollisionEnter(Collision collision)
+    //{
+    //    if (collision.gameObject.tag == "Level")
+    //    {
+    //        for (int i = 0; i < collision.contacts.Length; i++)
+    //        {
+    //            var contact = collision.contacts[i];
+    //            if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90)
+    //            {
+    //                grounded = false;
+    //                return;
+    //            }
+    //        }
 
-            isLeavingGround = false;
-            grounded = true;
-        }
-    }
+    //        isLeavingGround = false;
+    //        grounded = true;
+    //    }
+    //}
 
-    void OnCollisionStay(Collision collision)
-    {
-        if (collision.gameObject.tag == "Level")
-        {
-            for (int i = 0; i < collision.contacts.Length; i++)
-            {
-                var contact = collision.contacts[i];
-                if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90 + slopeAngleLimit)
-                {
-                    grounded = false;
-                    return;
-                }
-            }
+    //void OnCollisionStay(Collision collision)
+    //{
+    //    if (collision.gameObject.tag == "Level")
+    //    {
+    //        for (int i = 0; i < collision.contacts.Length; i++)
+    //        {
+    //            //var contact = collision.contacts[i];
+    //            //if ((contact.point - rBody.position).magnitude > 0.01)
+    //            //{
+    //            //    if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90 + slopeAngleLimit)
+    //            //    {
+    //            //        grounded = false;
+    //            //        return;
+    //            //    }
+    //            //}
+    //        }
 
-            isLeavingGround = false;
-            grounded = true;
+    //        isLeavingGround = false;
+    //        grounded = true;
 
-            //Vector3 normal = new Vector3();
-            //foreach (var contact in collision.contacts)
-            //{
-            //    normal += contact.normal;
-            //}
-            //normal /= collision.contacts.Length;
-            //normal.Normalize();
+    //        //Vector3 normal = new Vector3();
+    //        //foreach (var contact in collision.contacts)
+    //        //{
+    //        //    normal += contact.normal;
+    //        //}
+    //        //normal /= collision.contacts.Length;
+    //        //normal.Normalize();
 
-            //forwardDir = Vector3.Cross(Vector3.back, normal).normalized;
+    //        //forwardDir = Vector3.Cross(Vector3.back, normal).normalized;
 
-            //if (Vector3.Angle(GravityDirection.ToVector3(), forwardDir) < 150)
-            //{
-            //    forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
-            //}
-        }
-    }
+    //        //if (Vector3.Angle(GravityDirection.ToVector3(), forwardDir) < 150)
+    //        //{
+    //        //    forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
+    //        //}
+    //    }
+    //}
 
-    void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.tag == "Level")
-        {
-            isLeavingGround = true;
+    //void OnCollisionExit(Collision collision)
+    //{
+    //    if (collision.gameObject.tag == "Level")
+    //    {
+    //        isLeavingGround = true;
 
-            //After 1/10 of a second
-            StartCoroutine(ExecuteWithDelay(0.1f, () =>
-            {
-                if (isLeavingGround)
-                {
-                    grounded = false;
-                    isLeavingGround = false;
-                }
-            }));
-        }
-    }
+    //        //After 1/10 of a second
+    //        StartCoroutine(ExecuteWithDelay(0.4f, () =>
+    //        {
+    //            if (isLeavingGround)
+    //            {
+    //                grounded = false;
+    //                isLeavingGround = false;
+    //            }
+    //        }));
+    //    }
+    //}
+
+    //void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.tag == "Player")
+    //    {
+    //        if (other is BoxCollider)
+    //        {
+    //            bodyTouching = true;
+    //        }
+
+    //        if (other is SphereCollider)
+    //        {
+    //            feetTouching = true;
+    //            isLeavingGround = false;
+    //        }
+
+    //        grounded = feetTouching && !bodyTouching;
+    //    }
+    //}
+
+    //void OnTriggerStay(Collider other)
+    //{
+    //    grounded = feetTouching && !bodyTouching;
+    //    isLeavingGround = false;
+    //}
+
+    //void OnTriggerExit(Collider other)
+    //{
+
+    //}
 
     IEnumerator ExecuteWithDelay(float time, Action action)
     {
@@ -348,7 +397,7 @@ public class SideScrollCharacterController : MonoBehaviour
 
         Debug.Log(forwardForce);
 
-        if (grounded)
+        if (feetTouching)
         {
             if (forwardForce.magnitude < .01)
             {
@@ -357,7 +406,7 @@ public class SideScrollCharacterController : MonoBehaviour
             else
             {
                 rBody.velocity += forwardForce;
-                rBody.AddForce(gravityForce, ForceMode.Acceleration);
+                //rBody.AddForce(gravityForce, ForceMode.Acceleration);
 
                 //Limit speed
                 if (rBody.velocity.x > terminalLandSpeed || rBody.velocity.x < -terminalLandSpeed)
