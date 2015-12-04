@@ -149,6 +149,7 @@ public class SideScrollCharacterController : MonoBehaviour
 
             lastVelocity = rBody.velocity;
             rBody.velocity = Vector3.zero;
+            forwardInput = 0;
         }
 
         if (Input.GetKeyUp(KeyCode.Q))
@@ -167,6 +168,7 @@ public class SideScrollCharacterController : MonoBehaviour
 
             lastVelocity = rBody.velocity;
             rBody.velocity = Vector3.zero;
+            forwardInput = 0;
         }
     }
 
@@ -206,7 +208,7 @@ public class SideScrollCharacterController : MonoBehaviour
 
     //private void DetectDamage()
     //{
-        
+
     //}
 
     private void AnimateRotation()
