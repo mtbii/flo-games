@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,11 @@ namespace Assets.Scripts
         public static GameManager instance;
         public Canvas winScreen;
         public Canvas loseScreen;
+
+        public Animator loseAnimColorFade;
+        public Animator winAnimColorFade;
+        public AnimationClip fadeColorAnimationClip;
+
 
         private GUIScript gui;
 
@@ -77,14 +83,40 @@ namespace Assets.Scripts
             Time.timeScale = 0;
         }
 
+        IEnumerator ExecuteWithDelay(float time, Action action)
+        {
+            yield return new WaitForSeconds(time);
+
+            if (action != null)
+            {
+                action();
+            }
+        }
+
         public void ReloadLevel()
         {
-            Application.LoadLevel(Application.loadedLevel);
             Time.timeScale = 1;
+
+            //StartCoroutine(ExecuteWithDelay(fadeColorAnimationClip.length * 0.5f, () =>
+            //{
+            Application.LoadLevel(Application.loadedLevel);
+            //}));
+
+            //if (winScreen.gameObject.activeSelf)
+            //{
+            //    winAnimColorFade.SetTrigger("fade");
+            //}
+            //else if (loseScreen.gameObject.activeSelf)
+            //{
+            //    loseAnimColorFade.SetTrigger("fade");
+            //}
         }
 
         public void GoToNextLevel()
         {
+            Time.timeScale = 1;
+            //StartCoroutine(ExecuteWithDelay(fadeColorAnimationClip.length * 0.5f, () =>
+            //{
             if (Application.loadedLevel + 1 < Application.levelCount)
             {
                 Application.LoadLevel(Application.loadedLevel + 1);
@@ -93,13 +125,34 @@ namespace Assets.Scripts
             {
                 Application.LoadLevel(0);
             }
-            Time.timeScale = 1;
+            //}));
+
+            //if (winScreen.gameObject.activeSelf)
+            //{
+            //    winAnimColorFade.SetTrigger("fade");
+            //}
+            //else if (loseScreen.gameObject.activeSelf)
+            //{
+            //    loseAnimColorFade.SetTrigger("fade");
+            //}
         }
 
         public void GoToMainMenu()
         {
-            Application.LoadLevel(0);
             Time.timeScale = 1;
+            //StartCoroutine(ExecuteWithDelay(fadeColorAnimationClip.length * 0.5f, () =>
+            //{
+            Application.LoadLevel(0);
+            //}));
+
+            //if (winScreen.gameObject.activeSelf)
+            //{
+            //    winAnimColorFade.SetTrigger("fade");
+            //}
+            //else if (loseScreen.gameObject.activeSelf)
+            //{
+            //    loseAnimColorFade.SetTrigger("fade");
+            //}
         }
 
         public void Quit()

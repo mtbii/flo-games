@@ -45,8 +45,6 @@ public class CameraController : MonoBehaviour
         {
             //moving
             MoveToTarget();
-            //rotating
-            LookAtTarget();
         }
     }
 
@@ -79,10 +77,5 @@ public class CameraController : MonoBehaviour
         destination = target.transform.position + Quaternion.Euler(0, 0, ((SideScrollCharacterController)target).GravityDirection.ToAngle()) * offsetFromTarget;
         transform.position = destination;
         transform.rotation = Quaternion.Euler(0, 0, ((SideScrollCharacterController)target).GravityDirection.ToAngle());
-    }
-
-    void LookAtTarget()
-    {
-
     }
 }

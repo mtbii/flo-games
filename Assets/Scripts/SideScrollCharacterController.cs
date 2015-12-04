@@ -8,11 +8,15 @@ public class SideScrollCharacterController : MonoBehaviour
     public float inputDeadzone = 0.1f;
     public float forwardVel = 1;
     public float gravityTurnTime = 1;
+    public int slopeAngleLimit = 60;
+    public float airSpeedDamping = .1f;
 
     private float forwardInput;
     private Rigidbody rBody;
     private Animator animator;
     private bool grounded;
+    private float terminalVelocity = 7;
+    private float terminalLandSpeed = 1;
 
     private float startRotationTime = 0;
     //private float rotationParam = 0;
@@ -97,7 +101,17 @@ public class SideScrollCharacterController : MonoBehaviour
 
     void GetInput()
     {
-        forwardInput = Input.GetAxis("Horizontal");
+        forwardInput = 0;// Input.GetAxis("Horizontal");
+
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            forwardInput = -1;
+        }
+
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        {
+            forwardInput = 1;
+        }
 
         if (grounded)
         {
@@ -172,8 +186,7 @@ public class SideScrollCharacterController : MonoBehaviour
         {
             AnimateRotation();
         }
-
-        Debug.Log(rBody.velocity);
+        //Debug.Log(rBody.velocity);
         //else
         //{
         //    GetInput();
@@ -248,6 +261,16 @@ public class SideScrollCharacterController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Level")
         {
+            for (int i = 0; i < collision.contacts.Length; i++)
+            {
+                var contact = collision.contacts[i];
+                if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90)
+                {
+                    grounded = false;
+                    return;
+                }
+            }
+
             isLeavingGround = false;
             grounded = true;
         }
@@ -257,20 +280,33 @@ public class SideScrollCharacterController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Level")
         {
-            Vector3 normal = new Vector3();
-            foreach (var contact in collision.contacts)
+            for (int i = 0; i < collision.contacts.Length; i++)
             {
-                normal += contact.normal;
+                var contact = collision.contacts[i];
+                if (Vector3.Angle(GravityDirection.ToVector3(), contact.point - rBody.position) >= 90 + slopeAngleLimit)
+                {
+                    grounded = false;
+                    return;
+                }
             }
-            normal /= collision.contacts.Length;
-            normal.Normalize();
 
-            forwardDir = Vector3.Cross(Vector3.back, normal).normalized;
+            isLeavingGround = false;
+            grounded = true;
 
-            if (Vector3.Angle(GravityDirection.ToVector3(), forwardDir) < 150)
-            {
-                forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
-            }
+            //Vector3 normal = new Vector3();
+            //foreach (var contact in collision.contacts)
+            //{
+            //    normal += contact.normal;
+            //}
+            //normal /= collision.contacts.Length;
+            //normal.Normalize();
+
+            //forwardDir = Vector3.Cross(Vector3.back, normal).normalized;
+
+            //if (Vector3.Angle(GravityDirection.ToVector3(), forwardDir) < 150)
+            //{
+            //    forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
+            //}
         }
     }
 
@@ -304,63 +340,106 @@ public class SideScrollCharacterController : MonoBehaviour
 
     void UpdateCharacterPosition()
     {
-        if (!grounded)
-            forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
+        //if (!grounded)
+        forwardDir = GravityDirection.TurnCounterClockwise().ToVector3();
 
-        float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
-        if (Mathf.Abs(forwardInput) > inputDeadzone)
+        var forwardForce = forwardInput * forwardVel * forwardDir;
+        var gravityForce = 9.8f * GravityDirection.ToVector3();
+
+        Debug.Log(forwardForce);
+
+        if (grounded)
         {
-            rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * 10 * Time.fixedDeltaTime;
-            float moveSpeed = Vector3.Dot(rBody.velocity, forwardDir);
-
-            if (grounded)
+            if (forwardForce.magnitude < .01)
             {
-                if (Mathf.Abs(moveSpeed) > forwardVel)
-                {
-                    rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel * (facingForward ? 1 : -1);
-                }
+                rBody.velocity = Vector3.zero;
             }
             else
             {
-                if (moveSpeed > 0 && forwardInput > 0 || moveSpeed < 0 && forwardInput < 0)
-                {
-                    rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * (1.0f / 320f) * Time.fixedDeltaTime;
+                rBody.velocity += forwardForce;
+                rBody.AddForce(gravityForce, ForceMode.Acceleration);
 
-                    if (Mathf.Abs(moveSpeed) > forwardVel)
-                    {
-                        rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel;
-                    }
+                //Limit speed
+                if (rBody.velocity.x > terminalLandSpeed || rBody.velocity.x < -terminalLandSpeed)
+                {
+                    rBody.velocity = new Vector3(rBody.velocity.x > 0 ? terminalLandSpeed : -terminalLandSpeed, rBody.velocity.y);
                 }
-                else if (moveSpeed < 0 && forwardInput > 0 || moveSpeed > 0 && forwardInput < 0)
-                {
-                    Vector3 moveFactor = moveSpeed * forwardDir * (1 - 32 * Time.fixedDeltaTime);
-                    float newMoveSpeed = Vector3.Dot(moveFactor, forwardDir);
 
-                    if (Math.Abs(newMoveSpeed) > forwardVel / 4.0)
-                    {
-                        rBody.velocity = gravityVel * GravityDirection.ToVector3() + moveFactor;
-                    }
+                if (rBody.velocity.y > terminalLandSpeed || rBody.velocity.y < -terminalLandSpeed)
+                {
+                    rBody.velocity = new Vector3(rBody.velocity.x, rBody.velocity.y > 0 ? terminalLandSpeed : -terminalLandSpeed);
                 }
             }
         }
         else
         {
-            if (grounded)
-            {
-                //float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
-                //rBody.velocity = gravityVel * GravityDirection.ToVector3();
-                rBody.velocity = gravityVel * GravityDirection.ToVector3();
-            }
+            rBody.velocity += forwardForce * airSpeedDamping;
+            rBody.AddForce(gravityForce, ForceMode.Acceleration);
         }
 
-        rBody.AddForce(9.8f * GravityDirection.ToVector3(), ForceMode.Acceleration);
+        //Limit speed
+        if (rBody.velocity.x > terminalVelocity || rBody.velocity.x < -terminalVelocity)
+        {
+            rBody.velocity = new Vector3(rBody.velocity.x > 0 ? terminalVelocity : -terminalVelocity, rBody.velocity.y);
+        }
+
+        if (rBody.velocity.y > terminalVelocity || rBody.velocity.y < -terminalVelocity)
+        {
+            rBody.velocity = new Vector3(rBody.velocity.x, rBody.velocity.y > 0 ? terminalVelocity : -terminalVelocity);
+        }
+
+        //float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
+        //if (Mathf.Abs(forwardInput) > inputDeadzone)
+        //{
+        //    rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * 10 * Time.fixedDeltaTime;
+        //    float moveSpeed = Vector3.Dot(rBody.velocity, forwardDir);
+
+        //    if (grounded)
+        //    {
+        //        if (Mathf.Abs(moveSpeed) > forwardVel)
+        //        {
+        //            rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel * (facingForward ? 1 : -1);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (moveSpeed > 0 && forwardInput > 0 || moveSpeed < 0 && forwardInput < 0)
+        //        {
+        //            rBody.velocity += forwardDir * forwardVel * (facingForward ? 1 : -1) * (1.0f / 320f) * Time.fixedDeltaTime;
+
+        //            if (Mathf.Abs(moveSpeed) > forwardVel)
+        //            {
+        //                rBody.velocity = gravityVel * GravityDirection.ToVector3() + forwardDir * forwardVel;
+        //            }
+        //        }
+        //        else if (moveSpeed < 0 && forwardInput > 0 || moveSpeed > 0 && forwardInput < 0)
+        //        {
+        //            Vector3 moveFactor = moveSpeed * forwardDir * (1 - 32 * Time.fixedDeltaTime);
+        //            float newMoveSpeed = Vector3.Dot(moveFactor, forwardDir);
+
+        //            if (Math.Abs(newMoveSpeed) > forwardVel / 4.0)
+        //            {
+        //                rBody.velocity = gravityVel * GravityDirection.ToVector3() + moveFactor;
+        //            }
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    if (grounded)
+        //    {
+        //        //float gravityVel = Vector3.Dot(rBody.velocity, GravityDirection.ToVector3());
+        //        //rBody.velocity = gravityVel * GravityDirection.ToVector3();
+        //        rBody.velocity = gravityVel * GravityDirection.ToVector3();
+        //    }
+        //}
     }
 
-    public void Reset()
-    {
-        rBody.rotation = Quaternion.AngleAxis(90, Vector3.up);
-        rBody.position = new Vector3(0, 25, -10);
-        rBody.velocity = Vector3.zero;
-        GravityDirection = Direction.Down;
-    }
+    //public void Reset()
+    //{
+    //    rBody.rotation = Quaternion.AngleAxis(90, Vector3.up);
+    //    rBody.position = new Vector3(0, 25, -10);
+    //    rBody.velocity = Vector3.zero;
+    //    GravityDirection = Direction.Down;
+    //}
 }
