@@ -32,7 +32,7 @@ public class EnemyMovement : MonoBehaviour {
         transform.position = pos;
 
         enemyDistance = Vector3.Distance(transform.position, target.position);
-        Debug.LogError("enemyDistance = " + enemyDistance);
+        //Debug.LogError("enemyDistance = " + enemyDistance);
 
         if (currentWaypoint < waypoints.Length)
         {

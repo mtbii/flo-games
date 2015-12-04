@@ -173,13 +173,19 @@ public class SideScrollCharacterController : MonoBehaviour
             AnimateRotation();
         }
 
-        Debug.Log(rBody.velocity);
+        //Debug.LogError("Velocity = " + rBody.velocity.magnitude);
+        
         //else
         //{
         //    GetInput();
         //    UpdateCharacterPosition();
         //}
     }
+
+    //private void DetectDamage()
+    //{
+        
+    //}
 
     private void AnimateRotation()
     {
